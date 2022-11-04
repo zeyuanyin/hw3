@@ -1,3 +1,5 @@
+import sys
+sys.path.append("./python")
 import numpy as np
 import pytest
 import mugrade
@@ -5,7 +7,7 @@ import needle as ndl
 from needle import backend_ndarray as nd
 
 
-_DEVICES = [nd.cpu(), pytest.param(nd.cuda(), 
+_DEVICES = [nd.cpu(), pytest.param(nd.cuda(),
     marks=pytest.mark.skipif(not nd.cuda().enabled(), reason="No GPU"))]
 
 
@@ -54,19 +56,19 @@ def check_same_memory(original, view):
      "shape": (8, 8, 2, 2, 2, 2),
      "np_fn": lambda X: X[1:3, 5:8, 1:2, 0:1, 0:1, 1:2],
      "nd_fn": lambda X: X[1:3, 5:8, 1:2, 0:1, 0:1, 1:2]
-    }, 
+    },
     {
      "shape": (7, 8),
      "np_fn": lambda X: X.transpose()[3:7,2:5],
      "nd_fn": lambda X: X.permute((1, 0))[3:7,2:5]
-    },   
+    },
 ], ids=["transpose", "broadcast_to", "reshape1", "reshape2", "reshape3", "getitem1", "getitem2", "transposegetitem"])
 @pytest.mark.parametrize("device", _DEVICES, ids=["cpu", "cuda"])
 def test_compact(params, device):
     shape, np_fn, nd_fn = params['shape'], params['np_fn'], params['nd_fn']
     _A = np.random.randint(low=0, high=10, size=shape)
     A = nd.array(_A, device=device)
-    
+
     lhs = nd_fn(A).compact()
     assert lhs.is_compact(), "array is not compact"
 
@@ -85,7 +87,7 @@ reduce_params = [
 def test_reduce_sum(params, device):
     dims, axis = params['dims'], params['axis']
     _A = np.random.randn(*dims)
-    A = nd.array(_A, device=device)   
+    A = nd.array(_A, device=device)
     np.testing.assert_allclose(_A.sum(axis=axis, keepdims=True), A.sum(axis=axis).numpy(), atol=1e-5, rtol=1e-5)
 
 
@@ -94,7 +96,7 @@ def test_reduce_sum(params, device):
 def test_reduce_max(params, device):
     dims, axis = params['dims'], params['axis']
     _A = np.random.randn(*dims)
-    A = nd.array(_A, device=device)   
+    A = nd.array(_A, device=device)
     np.testing.assert_allclose(_A.max(axis=axis, keepdims=True), A.max(axis=axis).numpy(), atol=1e-5, rtol=1e-5)
 
 
@@ -121,7 +123,7 @@ ShapeAndSlices = lambda *shape: _ShapeAndSlices(np.ones(shape))
     {
         "lhs": ShapeAndSlices(4, 5, 6)[1:3, 2:5, 2:6],
         "rhs": ShapeAndSlices(7, 7, 7)[:2, :3, :4]
-    },   
+    },
 ])
 @pytest.mark.parametrize("device", _DEVICES, ids=["cpu", "cuda"])
 def test_setitem_ewise(params, device):
@@ -147,7 +149,7 @@ def test_setitem_ewise(params, device):
     ShapeAndSlices(4, 5, 6)[:4,  2:5, 3],
     ShapeAndSlices(4, 5, 6)[1::2, 2:5, ::2],
 ])
-@pytest.mark.parametrize("device", _DEVICES, ids=["cpu", "cuda"]) 
+@pytest.mark.parametrize("device", _DEVICES, ids=["cpu", "cuda"])
 def test_setitem_scalar(params, device):
     shape, slices = params
     _A = np.random.randn(*shape)
@@ -287,15 +289,15 @@ def test_broadcast_to(device, params):
     check_same_memory(A, rhs)
 
 
-matmul_dims = [(16, 16, 16), 
-    (8, 8, 8), 
-    (1, 2, 3), 
-    (3, 4, 5), 
-    (5, 4, 3), 
-    (64, 64, 64), 
-    (72, 72, 72), 
-    (72, 73, 74), 
-    (74, 73, 72), 
+matmul_dims = [(16, 16, 16),
+    (8, 8, 8),
+    (1, 2, 3),
+    (3, 4, 5),
+    (5, 4, 3),
+    (64, 64, 64),
+    (72, 72, 72),
+    (72, 73, 74),
+    (74, 73, 72),
     (128, 128, 128)]
 @pytest.mark.parametrize("device", _DEVICES, ids=["cpu", "cuda"])
 @pytest.mark.parametrize("m,n,p", matmul_dims)
